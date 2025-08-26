@@ -12,7 +12,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
 migrate = Migrate(app, db)
-
 db.init_app(app)
 
 @app.route('/clear')
@@ -27,8 +26,22 @@ def index_articles():
 
 @app.route('/articles/<int:id>')
 def show_article(id):
-    pass
+    
+    if 'page_views' not in session:
+        session['page_views'] = 0
 
+   
+    session['page_views'] += 1
+
+    
+    article = Article.query.get_or_404(id)
+    data = ArticleSchema().dump(article)
+
+    
+    if session['page_views'] <= 3:
+        return make_response(data, 200)
+    else:
+        return make_response({'message': 'Maximum pageview limit reached'}, 401)
 
 if __name__ == '__main__':
     app.run(port=5555)
